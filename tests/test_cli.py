@@ -1,6 +1,9 @@
 """Testes da interface de linha de comando."""
 
+import importlib
 import json
+import runpy
+import sys
 from pathlib import Path
 
 import pytest
@@ -61,6 +64,30 @@ def test_main_writes_all_artifacts(
     payload = json.loads(report.with_suffix(".json").read_text(encoding="utf-8"))
     assert payload["config"]["epochs"] == 50
     assert load_model(model).n_inputs == 4
+
+
+def test_main_module_can_be_imported() -> None:
+    module = importlib.import_module("iris_nn.__main__")
+
+    assert callable(module.main)
+
+
+def test_module_entrypoint_runs(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["iris-nn", "--epochs", "5", "--log-level", "WARNING"],
+    )
+    sys.modules.pop("iris_nn.__main__", None)
+
+    with pytest.raises(SystemExit) as error:
+        runpy.run_module("iris_nn", run_name="__main__", alter_sys=True)
+
+    assert error.value.code == 0
+    assert "Acurácia" in capsys.readouterr().out
 
 
 def test_main_without_artifacts(

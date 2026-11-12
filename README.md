@@ -284,7 +284,7 @@ make lint       # ruff + ruff format --check + mypy
 make format     # aplica correções e formatação
 ```
 
-A suíte possui **101 testes** e **100% de cobertura** de linhas e branches do
+A suíte possui **103 testes** e **100% de cobertura** de linhas e branches do
 pacote. Os testes incluem:
 
 - verificação dos gradientes por diferenças finitas;
