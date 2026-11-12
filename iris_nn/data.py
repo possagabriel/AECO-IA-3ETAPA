@@ -3,17 +3,16 @@
 from dataclasses import dataclass
 
 import numpy as np
-from numpy.typing import NDArray
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-FloatArray = NDArray[np.float64]
+from iris_nn._typing import AnyArray, FloatArray
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=False)
 class IrisDataset:
-    """Conjuntos de treino e teste já normalizados e em one-hot encoding."""
+    """Conjuntos de treino e teste normalizados e com alvos em one-hot."""
 
     X_train: FloatArray
     X_test: FloatArray
@@ -22,8 +21,42 @@ class IrisDataset:
     feature_names: tuple[str, ...]
     class_names: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if self.X_train.ndim != 2 or self.X_test.ndim != 2:
+            raise ValueError("X_train e X_test devem ser matrizes bidimensionais.")
+        if self.X_train.shape[1] != self.X_test.shape[1]:
+            raise ValueError("Treino e teste devem ter a mesma quantidade de features.")
 
-def to_one_hot(labels: np.ndarray, n_classes: int) -> FloatArray:
+        n_classes = len(self.class_names)
+        if self.y_train.shape != (self.X_train.shape[0], n_classes):
+            raise ValueError("y_train não corresponde às amostras ou classes.")
+        if self.y_test.shape != (self.X_test.shape[0], n_classes):
+            raise ValueError("y_test não corresponde às amostras ou classes.")
+        if len(self.feature_names) != self.X_train.shape[1]:
+            raise ValueError("feature_names não corresponde às colunas de entrada.")
+
+    @property
+    def n_features(self) -> int:
+        """Quantidade de características de entrada."""
+        return int(self.X_train.shape[1])
+
+    @property
+    def n_classes(self) -> int:
+        """Quantidade de classes de saída."""
+        return len(self.class_names)
+
+    @property
+    def n_train(self) -> int:
+        """Quantidade de amostras de treino."""
+        return int(self.X_train.shape[0])
+
+    @property
+    def n_test(self) -> int:
+        """Quantidade de amostras de teste."""
+        return int(self.X_test.shape[0])
+
+
+def to_one_hot(labels: AnyArray, n_classes: int) -> FloatArray:
     """Converte rótulos inteiros em uma matriz binária one-hot.
 
     Args:
@@ -42,6 +75,11 @@ def to_one_hot(labels: np.ndarray, n_classes: int) -> FloatArray:
         raise ValueError("Os rótulos devem ser um vetor unidimensional.")
     if n_classes < 1:
         raise ValueError("A quantidade de classes deve ser positiva.")
+    if labels.dtype.kind == "f":
+        if not np.all(np.isfinite(labels)) or not np.all(labels == np.floor(labels)):
+            raise ValueError("Os rótulos devem ser inteiros.")
+    elif labels.dtype.kind not in "iub":
+        raise ValueError("Os rótulos devem ser inteiros.")
     if labels.size > 0 and (labels.min() < 0 or labels.max() >= n_classes):
         raise ValueError("Os rótulos devem estar no intervalo [0, n_classes).")
 
@@ -83,14 +121,14 @@ def load_prepared_iris(
     )
 
     scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)
+    standardized_train = scaler.fit_transform(X_train)
+    standardized_test = scaler.transform(X_test)
 
     n_classes = len(iris.target_names)
 
     return IrisDataset(
-        X_train=X_train,
-        X_test=X_test,
+        X_train=np.asarray(standardized_train, dtype=np.float64),
+        X_test=np.asarray(standardized_test, dtype=np.float64),
         y_train=to_one_hot(y_train, n_classes),
         y_test=to_one_hot(y_test, n_classes),
         feature_names=tuple(iris.feature_names),
