@@ -1,10 +1,82 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "iris-neural-network"
+dynamic = ["version"]
+description = "Rede neural 4-8-3 do zero com NumPy para classificação do dataset Iris."
+readme = "README.md"
+requires-python = ">=3.11"
+keywords = ["iris", "neural-network", "numpy", "machine-learning", "education"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
+dependencies = [
+    "numpy>=2.0,<3.0",
+    "scikit-learn>=1.5,<2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.10",
+    "pytest>=8.0,<10.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.15",
+]
+
+[project.scripts]
+iris-nn = "iris_nn.cli:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "iris_nn._version.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["iris_nn*"]
+
+[tool.setuptools.package-data]
+iris_nn = ["py.typed"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra"
+addopts = "-ra --strict-config --strict-markers"
+
+[tool.coverage.run]
+source = ["iris_nn"]
+branch = true
+omit = ["iris_nn/__main__.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 90
 
 [tool.ruff]
 line-length = 88
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B"]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["iris_nn"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["iris_nn", "main.py"]
+show_error_codes = true
+pretty = true
+
+[[tool.mypy.overrides]]
+module = ["sklearn.*"]
+ignore_missing_imports = true
