@@ -19,7 +19,7 @@ de software.
 - Relatórios em texto, JSON e CSV, além de persistência do modelo em `.npz`.
 - CLI com validação de argumentos, logging configurável e artefatos opcionais.
 - Testes com verificação numérica dos gradientes e **100% de cobertura**.
-- Lint com Ruff, tipagem estrita com mypy e integração contínua no GitHub Actions.
+- Lint com Ruff, tipagem estrita com mypy e template de CI para GitHub Actions.
 
 ## Requisitos
 
@@ -243,7 +243,7 @@ model = load_model("models/iris.npz")
 
 ```text
 .
-├── .github/workflows/ci.yml
+├── ci/github-actions.yml.example
 ├── iris_nn/
 │   ├── __init__.py          # API pública e versão
 │   ├── __main__.py          # python -m iris_nn
@@ -295,8 +295,11 @@ pacote. Os testes incluem:
 - conteúdo dos relatórios JSON e CSV;
 - testes de fumaça dos pontos de entrada (`main.py` e `python -m iris_nn`).
 
-O workflow de CI executa lint, verificação de formatação, tipagem estrita e
-testes com cobertura em Python 3.11, 3.12, 3.13 e 3.14.
+O template de CI está em `ci/github-actions.yml.example` e executa lint,
+verificação de formatação, tipagem estrita e testes com cobertura em Python
+3.11, 3.12, 3.13 e 3.14. Para ativá-lo, copie o arquivo para
+`.github/workflows/ci.yml` e faça push com um token que tenha o escopo
+`workflow`.
 
 ## Decisões de projeto
 
